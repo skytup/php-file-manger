@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Editor By Skytup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    #editor-container {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Skytup Text Editor</h1>
+  <div id="editor-container">
+    <textarea id="editor"></textarea>
+  </div>
+
+  <script src="https://cdn.tiny.cloud/1/jbzwtz7jro7jh0ynlg7xy8mipyx534q7wi6ihxr3seirnamt/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+  <script>
+    tinymce.init({
+      selector: '#editor',
+      plugins: 'print preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
+      toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
+      height: 600,
+      content_css: 'https://example.com/path/to/your/css/file.css',
+      setup: function(editor) {
+        editor.on('init', function() {
+          console.log('TinyMCE editor initialized');
+        });
+
+        // Example event handler for the 'save' button
+        editor.addShortcut('ctrl+s', function() {
+          saveContent(editor.getContent());
+        });
+      }
+    });
+
+    function saveContent(content) {
+      // Here, you would implement the logic to save the content to a server or file
+      console.log('Saving content:', content);
+      // You can also perform operations like downloading as PDF or getting HTML
+    }
+  </script>
+</body>
+</html>

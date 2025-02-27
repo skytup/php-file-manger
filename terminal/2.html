@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Query Interface</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0F0;
+            --bg-color: #000;
+            --input-bg: #140327;
+            --error-color: #f00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #terminal {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 80px;
+        }
+
+        .query-result {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid var(--primary-color);
+            border-radius: 5px;
+        }
+
+        .error {
+            color: var(--error-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--primary-color);
+            padding: 8px;
+            text-align: left;
+        }
+
+        #input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--input-bg);
+            padding: 15px;
+            border-top: 1px solid var(--primary-color);
+        }
+
+        #query-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        #query-input {
+            flex: 1;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        button {
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+        }
+
+        .loading {
+            display: none;
+            margin-left: 10px;
+            color: var(--primary-color);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0a0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="terminal">
+        <h1>Database Query Interface</h1>
+        <p>Enter your SQL query below. Only SELECT queries are permitted.</p>
+    </div>
+
+    <div id="input-container">
+        <form id="query-form">
+            <input type="text" id="query-input" placeholder="Enter SQL query..." autocomplete="off">
+            <button type="submit">Execute</button>
+            <span class="loading">Processing query...</span>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            const terminal = $('#terminal');
+            const form = $('#query-form');
+            const input = $('#query-input');
+            const loading = $('.loading');
+
+            function appendResult(content, isError = false) {
+                const div = $('<div>')
+                    .addClass('query-result')
+                    .addClass(isError ? 'error' : '');
+
+                if (isError) {
+                    div.text(content);
+                } else {
+                    div.html(content);
+                }
+
+                terminal.append(div);
+                terminal.scrollTop(terminal.prop('scrollHeight'));
+            }
+
+            function formatQueryResult(data) {
+                if (data.length === 0) {
+                    return 'Query executed successfully. No results to display.';
+                }
+
+                const table = $('<table>');
+                const headers = Object.keys(data[0]);
+
+                // Create header row
+                const headerRow = $('<tr>');
+                headers.forEach(header => {
+                    headerRow.append($('<th>').text(header));
+                });
+                table.append(headerRow);
+
+                // Create data rows
+                data.forEach(row => {
+                    const dataRow = $('<tr>');
+                    headers.forEach(header => {
+                        dataRow.append($('<td>').text(row[header]));
+                    });
+                    table.append(dataRow);
+                });
+
+                return table;
+            }
+
+            form.on('submit', function (e) {
+                e.preventDefault();
+                const query = input.val().trim();
+
+                if (!query) return;
+
+                loading.show();
+                appendResult(`Executing query: ${query}`);
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'backend.php',
+                    data: { query: query },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.success) {
+                            appendResult(formatQueryResult(response.data));
+                        } else {
+                            appendResult(response.error, true);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        appendResult(`An error occurred: ${error}`, true);
+                    },
+                    complete: function () {
+                        loading.hide();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

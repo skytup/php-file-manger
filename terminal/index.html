@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skytup Sql Query Interface</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00ff9d;
+            --secondary-color: #0066ff;
+            --bg-color: #0a0f18;
+            --input-bg: #1a1f28;
+            --error-color: #ff4757;
+            --success-color: #2ed573;
+            --text-color: #ffffff;
+            --terminal-font: 'Courier New', monospace;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes glowText {
+            0% {
+                text-shadow: 0 0 5px var(--primary-color);
+            }
+
+            50% {
+                text-shadow: 0 0 20px var(--primary-color);
+            }
+
+            100% {
+                text-shadow: 0 0 5px var(--primary-color);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--terminal-font);
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #terminal {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .terminal-header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .terminal-header h1 {
+            font-size: 2.5em;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            animation: glowText 3s infinite;
+        }
+
+        .terminal-header p {
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .query-result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease-out;
+            transition: transform 0.3s ease;
+            overflow: auto !important;
+        }
+
+        .query-result:hover {
+            transform: translateX(5px);
+        }
+
+        .error {
+            border-left: 4px solid var(--error-color);
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        .success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            overflow: hidden !important;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 31, 40, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 3;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #query-form {
+            display: flex;
+            gap: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        #query-input {
+            flex: 1;
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid rgba(0, 255, 157, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        #query-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: var(--bg-color);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            display: none;
+            color: var(--primary-color);
+            animation: glowText 1.5s infinite;
+            margin-left: 15px;
+            align-self: center;
+        }
+
+        .status-icon {
+            margin-right: 10px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            #query-form {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .terminal-header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 157, 0.3);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 157, 0.5);
+        }
+
+        .query-history {
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-item {
+            cursor: pointer;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="particles-js"></div>
+    <div id="terminal">
+        <div class="terminal-header">
+            <h1>Advanced Query Interface</h1>
+            <p>Enter your SQL query below. Only SELECT queries are permitted.</p>
+        </div>
+    </div>
+
+    <div id="input-container">
+        <form id="query-form">
+            <input type="text" id="query-input" placeholder="SELECT * FROM your_table..." autocomplete="off">
+            <button type="submit">
+                <i class="fas fa-terminal"></i> Execute Query
+            </button>
+            <span class="loading">
+                <i class="fas fa-circle-notch fa-spin"></i> Processing...
+            </span>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize particles.js
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: '#00ff9d' },
+                    shape: { type: 'circle' },
+                    opacity: { value: 0.5, random: false },
+                    size: { value: 3, random: true },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: '#00ff9d',
+                        opacity: 0.2,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 2,
+                        direction: 'none',
+                        random: false,
+                        straight: false,
+                        out_mode: 'out',
+                        bounce: false
+                    }
+                },
+                interactivity: {
+                    detect_on: 'canvas',
+                    events: {
+                        onhover: { enable: true, mode: 'grab' },
+                        onclick: { enable: true, mode: 'push' },
+                        resize: true
+                    }
+                },
+                retina_detect: true
+            });
+
+            const terminal = $('#terminal');
+            const form = $('#query-form');
+            const input = $('#query-input');
+            const loading = $('.loading');
+            let queryHistory = [];
+
+            function appendResult(content, isError = false) {
+                const timestamp = new Date().toLocaleTimeString();
+                const icon = isError ?
+                    '<i class="fas fa-times-circle status-icon" style="color: var(--error-color)"></i>' :
+                    '<i class="fas fa-check-circle status-icon" style="color: var(--success-color)"></i>';
+
+                const div = $('<div>')
+                    .addClass('query-result')
+                    .addClass(isError ? 'error' : 'success')
+                    .html(`
+                        ${icon}
+                        <strong>[${timestamp}]</strong><br>
+                        ${content}
+                    `);
+
+                terminal.append(div);
+                terminal.scrollTop(terminal.prop('scrollHeight'));
+
+                // Add animation class
+                div.hide().fadeIn(500);
+            }
+
+            function formatQueryResult(data) {
+                // console.log("Received Data:", data);
+
+                // Ensure data is an array
+                if (!Array.isArray(data) || data.length === 0) {
+                    return 'Query executed successfully. No results to display.';
+                }
+
+                // Create table element
+                const table = $('<table>').addClass('table');
+
+                // Extract headers from the first object
+                const headers = Object.keys(data[0]);
+
+                // Create table header row
+                const headerRow = $('<tr>');
+                headers.forEach(header => {
+                    headerRow.append($('<th>').text(header));
+                });
+                table.append(headerRow);
+
+                // Create table rows
+                data.forEach(row => {
+                    const dataRow = $('<tr>');
+                    headers.forEach(header => {
+                        dataRow.append($('<td>').text(row[header]));
+                    });
+                    table.append(dataRow);
+                });
+
+                // console.log("Generated Table:", table);
+
+                return '<table>' + table[0]['innerHTML'] + '</table>';
+            }
+
+            function addToHistory(query) {
+                queryHistory.unshift(query);
+                queryHistory = queryHistory.slice(0, 5); // Keep only last 5 queries
+                updateHistoryDisplay();
+            }
+
+            function updateHistoryDisplay() {
+                const historyHtml = queryHistory.map(query => `
+                    <div class="history-item">
+                        <i class="fas fa-history"></i> ${query}
+                    </div>
+                `).join('');
+
+                $('.query-history').remove();
+                terminal.append(`
+                    <div class="query-history">
+                        <h3><i class="fas fa-clock"></i> Recent Queries</h3>
+                        ${historyHtml}
+                    </div>
+                `);
+            }
+
+            form.on('submit', function (e) {
+                e.preventDefault();
+                const query = input.val().trim();
+
+                if (!query) return;
+
+                loading.show();
+                addToHistory(query);
+                appendResult(`<i class="fas fa-terminal"></i> Executing query: ${query}`);
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'backend.php',
+                    data: { query: query },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.success) {
+                            appendResult(formatQueryResult(response.data));
+                        } else {
+                            appendResult(response.error, true);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        appendResult(`<i class="fas fa-exclamation-triangle"></i> An error occurred: ${error}`, true);
+                    },
+                    complete: function () {
+                        loading.hide();
+                    }
+                });
+            });
+
+            // Click handler for history items
+            $(document).on('click', '.history-item', function () {
+                input.val($(this).text().trim());
+            });
+
+            // Add some initial content
+            appendResult(`<i class="fas fa-info-circle"></i> Welcome to the Advanced Query Interface! 
+                         Start by entering a SELECT query below.`);
+        });
+    </script>
+</body>
+
+</html>

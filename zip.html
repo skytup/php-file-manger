@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extract ZIP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            min-height: 50px;
+            animation: fadeInUp 0.5s ease-in-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Media queries for responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Extract ZIP</h1>
+        <div class="form-group">
+            <label for="extract_from">Extract From:</label>
+            <input type="text" id="extract_from" placeholder="Enter the ZIP file path">
+        </div>
+        <div class="form-group">
+            <label for="extract_to">Extract To:</label>
+            <input type="text" id="extract_to" placeholder="Enter the destination path">
+        </div>
+        <button id="extract_btn">Extract</button>
+        <div id="result"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#extract_btn").click(function () {
+                var zip_from = $("#extract_from").val();
+                var extract_to = $("#extract_to").val();
+
+                if (zip_from === "" || extract_to === "") {
+                    $("#result").text("Please enter both 'Extract From' and 'Extract To' paths.").fadeIn();
+                    return;
+                }
+
+                $("#result").text("Extracting...").fadeIn();
+
+                $.ajax({
+                    type: "POST",
+                    url: "zip.php",
+                    data: {
+                        zip_from: zip_from,
+                        extract_to: extract_to
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $("#result").text("ZIP file extracted successfully!");
+                        } else {
+                            $("#result").text(response.error);
+                        }
+                    },
+                    error: function () {
+                        $("#result").text("An error occurred during the extraction process.");
+                    },
+                    dataType: "json"
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
